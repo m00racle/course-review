@@ -82,6 +82,25 @@ public class Sql2oCourseDao implements CourseDao{
 
     @Override
     public List<Course> findAll() {
-        return null;
+        /*
+        * to access the list of all courses in the database we first just like when we add the new course Open the
+        * connection to the database
+        * */
+        try (Connection con = sql2o.open()){
+            /*remember the connection is auto closable so we don't have to close it in here (since it is try resources
+            * the case is different with test of the Sql2oCourseDaoTest when we make the connection stays open in the
+            * beginning of the test
+            *
+            * now we use sql2o retrieval to retrieve all data in column using SQL SELECT * command.
+            *
+            *
+            * Then we use execute and fetch method to determine which class we want to make list into. In this case
+            * we want the Course class and this method will sort all out through getters and setters inside the
+            * Course class objects.
+            * */
+            return con.createQuery("SELECT * FROM courses")
+                    .executeAndFetch(Course.class);
+        }
+
     }
 }
