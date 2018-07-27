@@ -22,7 +22,8 @@ public class Api {
         *
         * Then we will run the script in the db/init.sql
         * */
-        Sql2o sql2o = new Sql2o("jdbc:h2:~/reviews.db; INIT=RUNSCRIP from 'classpath:db/init.sql'");
+        Sql2o sql2o = new Sql2o("jdbc:h2:~/reviews.db;INIT=RUNSCRIPT from 'classpath:db/init.sql'",
+                "", "");
 
         /*
         * remember if the database already exist we have the IF EXIST clause in our init.sql thus it will not
