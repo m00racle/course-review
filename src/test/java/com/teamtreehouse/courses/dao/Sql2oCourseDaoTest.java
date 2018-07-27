@@ -73,7 +73,7 @@ public class Sql2oCourseDaoTest {
         *
         * first let's make the Course object we want to add to the database
         * */
-        Course course = new Course("Test", "http:whatever.com");
+        Course course = newTestCourse();
 
         /*
         * let's fetch the Id of the Course to see if it is automatically set
@@ -103,7 +103,7 @@ public class Sql2oCourseDaoTest {
         *
         * Okay fist let's make our new course
         * */
-        Course course = new Course("Test", "http://what.com");
+        Course course = newTestCourse();
 
         /*
         * then we add the newly created Course object into DAO
@@ -128,5 +128,34 @@ public class Sql2oCourseDaoTest {
         *
         * To do this we just go straight to the asserts since we do not need to set any Courses */
         assertEquals(0, dao.findAll().size());
+    }
+
+    @Test
+    public void existingCoursesCanBeFoundById() throws Exception {
+        /*
+        * This test the findById method in Sql2oCourseDao class implements CourseDao
+        * Arrange:
+        * make new course and add into DAO
+        *
+        * Then try to find it using dao.findById method using the id of the newly created course
+        *
+        * Assert that it is foundCourse object is = course object
+        * */
+        Course course = newTestCourse();
+        dao.add(course);
+
+        Course foundCourse = dao.findById(course.getId());
+
+        assertEquals(course, foundCourse);
+    }
+
+    /**
+     * This new private method is the result of a Refactor that code new Course initialization as the arrangement
+     * prior to some tests here.
+     *
+     * We do not use @Before test method since although almost all tests do this arrangement not all test need it
+     * */
+    private Course newTestCourse() {
+        return new Course("Test", "http://what.com");
     }
 }

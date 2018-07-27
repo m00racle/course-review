@@ -103,4 +103,21 @@ public class Sql2oCourseDao implements CourseDao{
         }
 
     }
+
+    @Override
+    public Course findById(int id) {
+        /*
+        * Here we will pull a Course object based on the id given from the database
+        * First as always try to connect to the database similar with the findAll() method above. But here we had to
+        * declare a variable called id which in the Query string is represented by :id. We need to tell to sql2o that
+        * whenever there are variable named id means it is the id passed into this method.
+        *
+        * Then we only need to find one course with specific id thus we will only fetch the first result in the List
+        * */
+        try (Connection con = sql2o.open()){
+            return con.createQuery("SELECT * FROM courses WHERE id = :id")
+                    .addParameter("id", id)
+                    .executeAndFetchFirst(Course.class);
+        }
+    }
 }
