@@ -6,15 +6,33 @@ import com.teamtreehouse.courses.dao.Sql2oCourseDao;
 import com.teamtreehouse.courses.model.Course;
 import org.sql2o.Sql2o;
 
-import static spark.Spark.after;
-import static spark.Spark.get;
-import static spark.Spark.post;
+import static spark.Spark.*;
 
 /**
  * After adding the Gradle Spark dependency we go here to build our API to let other outside apps to reach us
  * */
 public class Api {
     public static void main(String[] args) {
+        String datasource = "jdbc:h2:~/reviews.db";
+        /*
+         * Now since we already created the test to re set the port and datasource we need to make sure that settings
+         * can be acknowledged by the main method in the Api class.
+         * This is how we do that:
+         *
+         * if the args is null (length = 0) then all of the settings of ports and datasource will be all code after this
+         * code block section.
+         * But if the args is not null (length>0) then we are going to make the String Array as the value of each of our
+         * settings
+         * */
+        if (args.length > 0){
+            if (args.length != 2){
+                System.out.println("java Api <port> <datasource>");
+                System.exit(0);
+            }
+            port(Integer.parseInt(args[0]));
+            datasource = args[1];
+        }
+
         /*
         * create new sql2o object and instatiate as new dao object
         *
@@ -22,7 +40,7 @@ public class Api {
         *
         * Then we will run the script in the db/init.sql
         * */
-        Sql2o sql2o = new Sql2o("jdbc:h2:~/reviews.db;INIT=RUNSCRIPT from 'classpath:db/init.sql'",
+        Sql2o sql2o = new Sql2o(String.format("%s;INIT=RUNSCRIPT from 'classpath:db/init.sql'", datasource),
                 "", "");
 
         /*
