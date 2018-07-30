@@ -3,8 +3,12 @@ package com.teamtreehouse.courses;
 import com.google.gson.Gson;
 import com.teamtreehouse.courses.dao.CourseDao;
 import com.teamtreehouse.courses.dao.Sql2oCourseDao;
+import com.teamtreehouse.courses.exc.ApiError;
 import com.teamtreehouse.courses.model.Course;
 import org.sql2o.Sql2o;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import static spark.Spark.*;
 
@@ -123,8 +127,14 @@ public class Api {
         * */
 
         get("/courses/:id", "application/json", (req, res) ->{
-            int id = Integer.parseInt(req.params("id"));// TODO: yan - what if this is not found?
+            int id = Integer.parseInt(req.params("id"));
             Course course = courseDao.findById(id);
+            /*
+            * Now after we make the exception handler ApiError we can put what if Course not found here
+            * */
+            if (course == null){
+                throw new ApiError(404, "Could Not find Course with id: " + id);
+            }
             return course;
         }, gson::toJson);
 
@@ -138,6 +148,39 @@ public class Api {
         * */
         after((req, res)-> {
             res.type("application/json");
+        });
+
+        /*
+        * Now that we already build the ApiError Exception handler class we can implement it here in the Api class
+        * Thus everytime an error happen here we eill throw the exception and also send an response of message and
+        * status of the error
+        * */
+        exception(ApiError.class, (exc, req, res) ->{
+            /*
+            * First we need to cast the exception into an ApiError object
+            * */
+            ApiError err = (ApiError)exc;
+            /*
+            * Next we build the JSON response. To do this like before we need to make a Map of variable and value
+            * onlyu this time the value is and Object rather just a string since there will be status which is an
+            * integer and message which is a String.
+            *
+            * Note for this message since in the ApiError class we pass the msg to superclass in the RuntimeException
+            * class there is one getter method for the message thus we can just use that through the ApiError object
+            * err
+            * */
+            Map<String, Object> jsonMap = new HashMap<>();
+            jsonMap.put("status", err.getStatus());
+            jsonMap.put("errorMsg", err.getMessage());
+            /*
+            * Now let's build the response:
+            * 1. since we build it from scratch we need to determine the type of data which is JSON
+            * 2. determine the status of the response
+            * 3. put the body of the response which already mapped in jsonMap
+            * */
+            res.type("application/json");
+            res.status(err.getStatus());
+            res.body(gson.toJson(jsonMap));
         });
     }
 }
