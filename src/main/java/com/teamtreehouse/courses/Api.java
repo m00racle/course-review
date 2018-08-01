@@ -2,9 +2,13 @@ package com.teamtreehouse.courses;
 
 import com.google.gson.Gson;
 import com.teamtreehouse.courses.dao.CourseDao;
+import com.teamtreehouse.courses.dao.ReviewDao;
 import com.teamtreehouse.courses.dao.Sql2oCourseDao;
+import com.teamtreehouse.courses.dao.Sql2oReviewDao;
 import com.teamtreehouse.courses.exc.ApiError;
+import com.teamtreehouse.courses.exc.DaoException;
 import com.teamtreehouse.courses.model.Course;
+import com.teamtreehouse.courses.model.Review;
 import org.sql2o.Sql2o;
 
 import java.util.HashMap;
@@ -54,6 +58,11 @@ public class Api {
         * Now we going to initialization of our dao using the CourseDao interface and Sql2oCourseDao as implementation
         * */
         CourseDao courseDao = new Sql2oCourseDao(sql2o);
+
+        /*
+        * We also need to initialize ReviewDao similar to CourseDao initialization
+        * */
+        ReviewDao reviewDao = new Sql2oReviewDao(sql2o);
 
         /*
         * Now we need to allow the users of our API to create a new course
@@ -139,6 +148,76 @@ public class Api {
         }, gson::toJson);
 
         /*
+         * Next we will start to build HTTP method to handle addition of a new review to a particular available course
+         * */
+        post("/courses/:courseId/reviews", "application/json", (req, res) -> {
+            /*
+            * First we need to determine the courseId of the request by fetching the :courseId in the request
+            * */
+            int courseId = Integer.parseInt(req.params("courseId"));
+
+            /*
+             * If the course does not (by looking at courseId we need to throw exceptions ApiError 404 and exit!
+             * */
+            if (courseDao.findById(courseId) == null){
+                throw new ApiError(404, "Could not find Course with id: " + courseId);
+            }
+
+            /*
+            * Next we create a new review using data from the JSON but remember the courseId data is comes from the
+            * request param above. Thus we need to ensure it Set using setCourseId()
+            * */
+            Review review = gson.fromJson(req.body(), Review.class);
+            review.setCourseId(courseId); // <- this sets the course Id for the review before added to database!
+
+            /*
+            * Learning from the dao test that some cases involving foreign key in this case courseId often causes
+            * runtime errors it is best to ensure catch it using DaoException
+            * */
+            try {
+                reviewDao.add(review);
+            } catch (DaoException ex){
+                /*
+                * when this exception happen throw it and apply to be apierror and pass the messaage with status 500
+                * or server error
+                * */
+                throw new ApiError(500, ex.getMessage());
+            }
+            /*
+            * If we manage to finish the review Dao task with no exception we need to send a status
+            * */
+            res.status(201);
+            return review;
+        }, gson::toJson);
+
+        /*
+        * building the findAll() API controller
+        * */
+        get("/reviews", "application/json", (req, res)->
+            reviewDao.findAll(), gson::toJson);
+
+        /*
+        * building API controller for findByCourseId
+        * */
+        get("/courses/:courseId/reviews", "application/json",
+                (req, res) -> {
+            int courseId = Integer.parseInt(req.params("courseId"));
+
+            /*
+            * Let's just make sure if the Course is indeed exist
+            * */
+            if (courseDao.findById(courseId) == null){
+                throw new ApiError(404, "There is no such Course with id: " + courseId);
+            }
+
+            /*
+            * If the course indeed exist let's find all available reviews if exist
+            * */
+
+            return reviewDao.findByCourseId(courseId);
+                }, gson::toJson);
+
+        /*
         * Even if both of our get and post request ensure to return a JSON object by definition to gson::toJson
         * method reference we still need to filter it out to ensure no non JSON data is returned as response to our
         * GET and POST request
@@ -182,5 +261,6 @@ public class Api {
             res.status(err.getStatus());
             res.body(gson.toJson(jsonMap));
         });
+
     }
 }
