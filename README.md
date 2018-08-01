@@ -9,3 +9,9 @@ This kind of aggregation of information is a common use case of Software as a Se
 
 The more elaborate Documentation of this course go to
 [this document](https://docs.google.com/document/d/1Wjwse7zQNIoLStWTg_W8zcnxwhQvkW7xH028r673JIk/edit?usp=sharing)
+
+This is a wrap:
+I think API is just part of DAO, Service layer mostly, Well controller and model also exist in this case but minus
+the View parts of programming.
+
+More to come in the Spring REST API which I think will be more elaborate.
