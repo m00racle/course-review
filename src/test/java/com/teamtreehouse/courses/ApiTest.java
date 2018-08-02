@@ -221,7 +221,18 @@ public class ApiTest {
         assertEquals(201, res.getStatus());
     }
 
-   /*
+    @Test
+    public void getFromNonReviewedCourseReturnsEmptyArray() throws Exception {
+        Course course = newTestCourse();
+        courseDao.add(course);
+
+        ApiResponse res = client.request("GET", "/courses/" + course.getId() + "/reviews");
+
+        Review[] retrieved = gson.fromJson(res.getBody(), Review[].class);
+
+        assertEquals(0, retrieved.length);
+    }
+    /*
    * Now test all non existing courses error in 404
    * */
 
